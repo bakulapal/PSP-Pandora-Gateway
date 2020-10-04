@@ -9,6 +9,9 @@
 #define PSPPORT	(PSPCOMPORT-1)
 #define BATPORT	(BATCOMPORT-1)
 #define BUFFSIZE (4096)
+
+//#define PANDORA_ON
+
 unsigned char battbuff[BUFFSIZE];
 unsigned char pspbuff[BUFFSIZE];
 
@@ -69,11 +72,13 @@ void forward_message( procstate_t *state ) {
 						}	
 						printf("\n");
 						
+						#ifdef PANDORA_ON
 						if( !comparearrays( state->buffer, mybattserialmsg , sizeof(mybattserialmsg) )){
 							state->sendfn( pandoraserialmsg, sizeof(pandoraserialmsg) );
 							state->bufferedchars = 0;
 							return;
 						}
+						#endif
 					} else {
 						return;
 					}
