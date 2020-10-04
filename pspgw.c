@@ -9,11 +9,17 @@
 #define PSPPORT	(PSPCOMPORT-1)
 #define BATPORT	(BATCOMPORT-1)
 #define BUFFSIZE (4096)
+
+//#define PANDORA_ON
+
 unsigned char battbuff[BUFFSIZE];
 unsigned char pspbuff[BUFFSIZE];
 
-char mybattserialmsg[]={0xA5, 0x06, 0x06, 0x86, 0x3D, 0x00, 0x8A, 0x01};
-char pandoraserialmsg[]={0xA5, 0x06, 0x06, 0xFF, 0xFF, 0xFF, 0xFF, 0x52};
+const char PSPADDRESS = 0x5A;
+const char BATTERYADDRESS = 0xA5;
+
+char mybattserialmsg[]={BATTERYADDRESS, 0x06, 0x06, 0x86, 0x3D, 0x00, 0x8A, 0x01};
+char pandoraserialmsg[]={BATTERYADDRESS, 0x06, 0x06, 0xFF, 0xFF, 0xFF, 0xFF, 0x52};
 
 
 int getbatt_byte( unsigned char *buff ){
@@ -51,7 +57,7 @@ void forward_message( procstate_t *state ) {
 	int i=0;
 	int chk=0;
 	if( state->bufferedchars > 0 ){
-		if( state->buffer[0] == 0x5A || state->buffer[0] == 0xA5 ){
+		if( state->buffer[0] == PSPADDRESS || state->buffer[0] == BATTERYADDRESS ){
 			if( state->bufferedchars > 1 ){
 				if( state->buffer[1] >=2 ){
 					if( state->bufferedchars >= (state->buffer[1]+2) ){	// Full message received
@@ -69,11 +75,13 @@ void forward_message( procstate_t *state ) {
 						}	
 						printf("\n");
 						
+						#ifdef PANDORA_ON
 						if( !comparearrays( state->buffer, mybattserialmsg , sizeof(mybattserialmsg) )){
 							state->sendfn( pandoraserialmsg, sizeof(pandoraserialmsg) );
 							state->bufferedchars = 0;
 							return;
 						}
+						#endif
 					} else {
 						return;
 					}
@@ -111,7 +119,7 @@ int sendpsp_buf( unsigned char *buf, int size ){
 }
 		
 procstate_t	battmsgstate={
-	.discardsrc = 0x5A,
+	.discardsrc = PSPADDRESS,
 	.bufferedchars = 0,
 	.buffer = battbuff,
 	.buffsize = sizeof(battbuff),
@@ -119,7 +127,7 @@ procstate_t	battmsgstate={
 };	
 
 procstate_t	pspmsgstate={
-	.discardsrc = 0xA5,
+	.discardsrc = BATTERYADDRESS,
 	.bufferedchars = 0,
 	.buffer = pspbuff,
 	.buffsize = sizeof(pspbuff),
